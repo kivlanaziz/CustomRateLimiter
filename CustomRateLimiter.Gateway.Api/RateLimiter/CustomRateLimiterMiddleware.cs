@@ -9,7 +9,7 @@ namespace CustomRateLimiter.Gateway.Api.RateLimiter
 
         private readonly CustomRateOptions _options;
 
-        private static readonly Dictionary<string, (int Count, DateTime ResetTime)> _requests = new();
+        private static readonly Dictionary<string, (double Tokens, DateTime LastRefill)> _requests = new();
         private static readonly Lock _lock = new();
         public CustomRateLimiterMiddleware(RequestDelegate next, ILogger<CustomRateLimiterMiddleware> logger, IOptions<CustomRateOptions> options)
         {
@@ -45,24 +45,29 @@ namespace CustomRateLimiter.Gateway.Api.RateLimiter
             {
                 if (_requests.TryGetValue(userId, out var info))
                 {
-                    _logger.LogDebug($"[MIDDLEWARE] | Request Count: {info.Count} - Reset Time: {info.ResetTime}");
-                    if (request > info.ResetTime)
+                    _logger.LogDebug($"[MIDDLEWARE] | Current Token: {info.Tokens} - Last Refill Time: {info.LastRefill}");
+
+                    var timeElapsed = (request - info.LastRefill).TotalSeconds;
+
+                    var tokenCount = Math.Min(_options.MaxToken, info.Tokens + timeElapsed * _options.RefillPerSecond);
+
+                    if (tokenCount >= 1)
                     {
-                        _requests[userId] = (1, request.Add(_options.Window));
-                        _logger.LogDebug($"[MIDDLEWARE] | RESET LIMITER FOR USER {userId}");
-                    }
-                    else if (info.Count >= _options.MaxRequest)
-                    {
-                        return false;
+                        _requests[userId] = (tokenCount - 1, request);
+
+                        _logger.LogDebug($"[MIDDLEWARE] | TOKEN REFRESHED - User {userId} Current Token: {info.Tokens} - Last Refill Time: {info.LastRefill}");
+                        return true;
                     }
                     else
                     {
-                        _requests[userId] = (info.Count + 1, info.ResetTime);
+                        _logger.LogDebug($"[MIDDLEWARE] | NO TOKEN LEFT - User {userId} Current Token: {info.Tokens} - Last Refill Time: {info.LastRefill}");
+
+                        return false;
                     }
                 }
                 else
                 {
-                    _requests[userId] = (1, request.Add(_options.Window));
+                    _requests[userId] = (_options.MaxToken, request);
                     _logger.LogDebug($"[MIDDLEWARE] | INIT REQUEST LIMITER FOR USER {userId}");
                 }
 

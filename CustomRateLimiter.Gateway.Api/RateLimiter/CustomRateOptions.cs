@@ -2,7 +2,7 @@
 {
     public class CustomRateOptions
     {
-        public int MaxRequest { get; set; }
-        public TimeSpan Window { get; set; }
+        public int MaxToken { get; set; }
+        public double RefillPerSecond { get; set; }
     }
 }
