@@ -1,0 +1,6 @@
+@CustomRateLimiter.Gateway.Api_HostAddress = http://localhost:5067
+
+GET {{CustomRateLimiter.Gateway.Api_HostAddress}}/getUserTickets?userId=A
+Accept: application/json
+
+###

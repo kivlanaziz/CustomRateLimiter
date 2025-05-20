@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomRateLimiter.Domain", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomRateLimiter.Infrastructure", "CustomRateLimiter.Infrastructure\CustomRateLimiter.Infrastructure.csproj", "{72238431-23C2-419C-84F7-71FB5332A124}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomRateLimiter.Gateway.Api", "CustomRateLimiter.Gateway.Api\CustomRateLimiter.Gateway.Api.csproj", "{66A58197-0B0A-4218-AAC5-FA29178700CE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{72238431-23C2-419C-84F7-71FB5332A124}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72238431-23C2-419C-84F7-71FB5332A124}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72238431-23C2-419C-84F7-71FB5332A124}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66A58197-0B0A-4218-AAC5-FA29178700CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66A58197-0B0A-4218-AAC5-FA29178700CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66A58197-0B0A-4218-AAC5-FA29178700CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66A58197-0B0A-4218-AAC5-FA29178700CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
