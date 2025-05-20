@@ -1,0 +1,6 @@
+@CustomRateLimiter.API_HostAddress = http://localhost:5234
+
+GET {{CustomRateLimiter.API_HostAddress}}/api/Ticket/tickets?userId=A
+Accept: application/json
+
+###
