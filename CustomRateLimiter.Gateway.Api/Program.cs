@@ -45,9 +45,11 @@ app.Map("/getUserTickets", async (HttpContext context, [FromServices] IHttpClien
     var targetUri = new Uri($"{webApiBaseUrl}/api/Ticket/tickets?userId={userId}");
     var requestMessage = new HttpRequestMessage(HttpMethod.Get, targetUri);
 
+    string[] allowedHeaders = { "Authorization", "User-Agent", "X-Request-ID" };
     foreach (var header in context.Request.Headers)
     {
-        requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
+        if (allowedHeaders.Contains(header.Key, StringComparer.OrdinalIgnoreCase))
+            requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
     }
 
     using var response = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
