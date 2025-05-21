@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using System.Collections.Concurrent;
 
 namespace CustomRateLimiter.Gateway.Api.RateLimiter
 {
@@ -9,8 +10,7 @@ namespace CustomRateLimiter.Gateway.Api.RateLimiter
 
         private readonly CustomRateOptions _options;
 
-        private static readonly Dictionary<string, (double Tokens, DateTime LastRefill)> _requests = new();
-        private static readonly Lock _lock = new();
+        private static readonly ConcurrentDictionary<string, UserRateLimiterInfo> _requests = new();
         public CustomRateLimiterMiddleware(RequestDelegate next, ILogger<CustomRateLimiterMiddleware> logger, IOptions<CustomRateOptions> options)
         {
             _next = next;
@@ -41,38 +41,34 @@ namespace CustomRateLimiter.Gateway.Api.RateLimiter
 
         private bool AllowRequest(string userId, DateTime request)
         {
-            lock (_lock)
+            if (_requests.TryGetValue(userId, out var info))
             {
-                if (_requests.TryGetValue(userId, out var info))
+                _logger.LogDebug($"[MIDDLEWARE] | Current Token: {info.Tokens} - Last Refill Time: {info.LastRefill}");
+
+                if (info.TryConsumeToken(_options.RefillPerSecond, _options.MaxToken, request))
                 {
-                    _logger.LogDebug($"[MIDDLEWARE] | Current Token: {info.Tokens} - Last Refill Time: {info.LastRefill}");
-
-                    var timeElapsed = (request - info.LastRefill).TotalSeconds;
-
-                    var tokenCount = Math.Min(_options.MaxToken, info.Tokens + timeElapsed * _options.RefillPerSecond);
-
-                    if (tokenCount >= 1)
-                    {
-                        _requests[userId] = (tokenCount - 1, request);
-
-                        _logger.LogDebug($"[MIDDLEWARE] | TOKEN REFRESHED - User {userId} Current Token: {info.Tokens} - Last Refill Time: {info.LastRefill}");
-                        return true;
-                    }
-                    else
-                    {
-                        _logger.LogDebug($"[MIDDLEWARE] | NO TOKEN LEFT - User {userId} Current Token: {info.Tokens} - Last Refill Time: {info.LastRefill}");
-
-                        return false;
-                    }
+                    _logger.LogDebug($"[MIDDLEWARE] | TOKEN REFRESHED - User {userId} Current Token: {info.Tokens} - Last Refill Time: {info.LastRefill}");
+                    return true;
                 }
                 else
                 {
-                    _requests[userId] = (_options.MaxToken, request);
-                    _logger.LogDebug($"[MIDDLEWARE] | INIT REQUEST LIMITER FOR USER {userId}");
+                    _logger.LogDebug($"[MIDDLEWARE] | NO TOKEN LEFT - User {userId} Current Token: {info.Tokens} - Last Refill Time: {info.LastRefill}");
+                    return false;
                 }
-
-                return true;
             }
+            else
+            {
+                var rateInfo = new UserRateLimiterInfo()
+                {
+                    LastRefill = request,
+                    Tokens = _options.MaxToken
+                };
+
+                _requests.TryAdd(userId, rateInfo);
+                _logger.LogDebug($"[MIDDLEWARE] | INIT REQUEST LIMITER FOR USER {userId}");
+            }
+
+            return true;
         }
     }
 }
