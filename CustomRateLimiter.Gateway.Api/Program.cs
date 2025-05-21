@@ -11,8 +11,8 @@ builder.Services.AddOpenApi();
 
 builder.Services.Configure<CustomRateOptions>(options =>
 {
-    options.MaxToken = 10;
-    options.RefillPerSecond = 0.0167;
+    options.MaxToken = 100;
+    options.RefillPerSecond = 0.167;
 });
 
 builder.Logging.ClearProviders();
